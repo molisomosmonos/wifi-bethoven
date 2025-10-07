@@ -7,28 +7,42 @@
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-  <main class="card">
-    <img src="logo.png" alt="Logo Wi-Fi" class="logo-img" />
-
+  <main class="card" id="home">
+    <div class="logo">📶</div>
     <h1>Simulacro Wi-Fi</h1>
 
-    <label for="ssid">Nombre de la red (opcional)</label>
-    <input id="ssid" placeholder="Ej: CAFÉ-PÚBLICO" />
+    <button id="btn" class="cta">Conectate a Wi-Fi</button>
 
-    <button id="btn">Conectate a Wi-Fi</button>
-
-    <p class="hint">Este es un simulacro educativo: al presionar suena una breve melodía 8-bit y aparece un aviso.</p>
+    <p class="hint">Al tocar, WIFI.</p>
   </main>
 
-  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
-    <div class="modal-content">
-      <h2>Simulacro educativo</h2>
-      <p><strong>No te conectes a cualquier red Wi-Fi.</strong></p>
-      <p id="modal-ssid" style="color:#cfe6ff;margin:6px 0"></p>
-      <p>Esto es un simulacro. Comprueba siempre la fuente antes de conectarte.</p>
-      <button id="close">Cerrar</button>
+  <!-- Pantalla de alerta (aparece tras el click) -->
+  <section id="alert" class="alert hidden" aria-hidden="true">
+    <!-- Si subís alerta.png al repo, se usará esta imagen -->
+    <img id="alertImg" src="alerta.png" alt="ALERTA: No te conectes a cualquier red Wi-Fi. Verifica." onerror="this.classList.add('hide')" />
+
+    <!-- Fallback SVG si no hay imagen -->
+    <div id="alertFallback" class="alert-fallback">
+      <svg viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#0b1220"/>
+            <stop offset="100%" stop-color="#101a33"/>
+          </linearGradient>
+        </defs>
+        <rect width="1200" height="600" fill="url(#g)"/>
+        <text x="600" y="190" text-anchor="middle" font-size="84" fill="#58a6ff" font-family="Segoe UI, Arial, sans-serif">⚠️  ALERTA</text>
+        <text x="600" y="300" text-anchor="middle" font-size="56" fill="#e6eef8" font-weight="700" font-family="Segoe UI, Arial, sans-serif">
+          NO TE CONECTES A CUALQUIER RED WIFI
+        </text>
+        <text x="600" y="370" text-anchor="middle" font-size="42" fill="#9fb0c9" font-family="Segoe UI, Arial, sans-serif">
+          VERIFICA SIEMPRE LA FUENTE — SIMULACRO EDUCATIVO
+        </text>
+      </svg>
     </div>
-  </div>
+
+    <button id="close" class="close">Cerrar</button>
+  </section>
 
   <script src="script.js"></script>
 </body>
