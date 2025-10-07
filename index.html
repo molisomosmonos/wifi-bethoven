@@ -4,26 +4,41 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Simulacro Wi-Fi — Educación</title>
-  <link rel="stylesheet" href="style.css"/>
+  <style>
+    :root{--bg:#071021;--card:#0b152a;--accent:#1e90ff;--text:#e6eef8;--muted:#9fb0c9}
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#071021,#0a1430);
+      color:var(--text);font-family:Inter,Segoe UI,Arial,-apple-system,system-ui}
+    main.card{width:min(720px,92%);margin:8vh auto;padding:28px 22px;text-align:center;
+      background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.015));
+      border-radius:14px;box-shadow:0 12px 34px rgba(0,0,0,.55)}
+    .logo{font-size:72px;margin-bottom:6px}
+    h1{margin:0 0 16px;font-size:26px}
+    .cta{margin-top:8px;width:100%;padding:16px;border:0;border-radius:12px;background:var(--accent);color:#fff;
+      font-weight:800;font-size:18px;box-shadow:0 10px 24px rgba(30,144,255,.22);cursor:pointer}
+    .hint{color:var(--muted);font-size:14px;margin-top:12px}
+    .alert{position:fixed;inset:0;background:rgba(6,10,22,.92);display:none;flex-direction:column;align-items:center;
+      justify-content:center;gap:14px;padding:20px;z-index:999}
+    .alert.show{display:flex}
+    .alert .panel{width:min(95vw,1100px);max-height:72vh;border-radius:12px;overflow:hidden;
+      box-shadow:0 12px 28px rgba(0,0,0,.6);background:#0b152a}
+    .close{margin-top:10px;padding:12px 16px;border-radius:10px;border:0;background:#243658;color:#fff;font-weight:700;cursor:pointer}
+    @media (prefers-reduced-motion: reduce){*{scroll-behavior:auto}}
+  </style>
 </head>
 <body>
-  <main class="card" id="home">
+  <main class="card">
     <div class="logo">📶</div>
     <h1>Simulacro Wi-Fi</h1>
-
     <button id="btn" class="cta">Conectate a Wi-Fi</button>
-
-    <p class="hint">Al tocar, WIFI.</p>
+    <p class="hint">Al tocar, BETOWIFI.</p>
   </main>
 
-  <!-- Pantalla de alerta (aparece tras el click) -->
-  <section id="alert" class="alert hidden" aria-hidden="true">
-    <!-- Si subís alerta.png al repo, se usará esta imagen -->
-    <img id="alertImg" src="alerta.png" alt="ALERTA: No te conectes a cualquier red Wi-Fi. Verifica." onerror="this.classList.add('hide')" />
-
-    <!-- Fallback SVG si no hay imagen -->
-    <div id="alertFallback" class="alert-fallback">
-      <svg viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid meet">
+  <!-- Cartel de alerta -->
+  <section id="alert" class="alert" aria-hidden="true">
+    <div class="panel">
+      <!-- Cartel SVG integrado -->
+      <svg viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid meet" width="100%" height="100%">
         <defs>
           <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stop-color="#0b1220"/>
@@ -31,19 +46,94 @@
           </linearGradient>
         </defs>
         <rect width="1200" height="600" fill="url(#g)"/>
-        <text x="600" y="190" text-anchor="middle" font-size="84" fill="#58a6ff" font-family="Segoe UI, Arial, sans-serif">⚠️  ALERTA</text>
-        <text x="600" y="300" text-anchor="middle" font-size="56" fill="#e6eef8" font-weight="700" font-family="Segoe UI, Arial, sans-serif">
-          NO TE CONECTES A CUALQUIER RED WIFI
-        </text>
-        <text x="600" y="370" text-anchor="middle" font-size="42" fill="#9fb0c9" font-family="Segoe UI, Arial, sans-serif">
-          VERIFICA SIEMPRE LA FUENTE — SIMULACRO EDUCATIVO
-        </text>
+        <text x="600" y="180" text-anchor="middle" font-size="88" fill="#58a6ff"
+              font-family="Segoe UI, Arial, sans-serif">⚠️  ALERTA</text>
+        <text x="600" y="290" text-anchor="middle" font-size="56" fill="#e6eef8" font-weight="700"
+              font-family="Segoe UI, Arial, sans-serif">NO TE CONECTES A CUALQUIER RED WIFI</text>
+        <text x="600" y="355" text-anchor="middle" font-size="44" fill="#cfe6ff"
+              font-family="Segoe UI, Arial, sans-serif">VERIFICA SIEMPRE LA FUENTE — SIMULACRO EDUCATIVO</text>
       </svg>
     </div>
-
     <button id="close" class="close">Cerrar</button>
   </section>
 
-  <script src="script.js"></script>
+  <script>
+    const btn = document.getElementById('btn');
+    const alertView = document.getElementById('alert');
+    const closeBtn = document.getElementById('close');
+
+    let ctx = null;
+
+    function tone(freq, ms, gain=0.22){ // un poco más alto que antes
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'square'; o.frequency.value = freq;
+      const now = ctx.currentTime;
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.linearRampToValueAtTime(gain, now + 0.01);
+      g.gain.setValueAtTime(gain, now + ms/1000 - 0.02);
+      g.gain.linearRampToValueAtTime(0.0001, now + ms/1000);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); o.stop(now + ms/1000 + 0.02);
+    }
+
+    function noise(ms, gain=0.10){
+      const sr = 44100, sec = ms/1000;
+      const buf = ctx.createBuffer(1, sr*sec, sr);
+      const data = buf.getChannelData(0);
+      for (let i=0;i<data.length;i++){ data[i]=(Math.random()*2-1)*(1 - i/data.length); }
+      const src = ctx.createBufferSource(); src.buffer = buf;
+      const g = ctx.createGain(); g.gain.value=gain;
+      src.connect(g); g.connect(ctx.destination);
+      const now = ctx.currentTime;
+      src.start(now); src.stop(now + sec);
+    }
+
+    // Frecuencias básicas (C mayor)
+    const F = {C4:262, D4:294, E4:330, F4:349, G4:392, A4:440, B4:494, C5:523};
+
+    // Beethoven - Oda a la Alegría (primer frase, dominio público)
+    // E E F G | G F E D | C C D E | E D D
+    const ODA = [
+      [F.E4,280],[F.E4,280],[F.F4,280],[F.G4,380],
+      [F.G4,280],[F.F4,280],[F.E4,280],[F.D4,360],
+      [F.C4,280],[F.C4,280],[F.D4,280],[F.E4,380],
+      [F.E4,320],[F.D4,240],[F.D4,520]
+    ];
+
+    function playMelody(sequence){
+      let t = 0;
+      sequence.forEach(([f,ms],i)=>{
+        setTimeout(()=>{
+          tone(f, ms);
+          if (i % 2 === 0) noise(60, 0.12); // mini “percusión” chiptune
+        }, t);
+        t += ms + 35;
+      });
+    }
+
+    btn.addEventListener('click', async () => {
+      if (!ctx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        ctx = new AC();
+      }
+      // iOS/Android: asegurar estado running
+      try { await ctx.resume(); } catch(e) {}
+
+      alertView.classList.add('show');
+      try { playMelody(ODA); } catch(e){ console.warn('Audio bloqueado:', e); }
+    });
+
+    closeBtn.addEventListener('click', () => {
+      alertView.classList.remove('show');
+    });
+
+    // Cerrar tocando fuera
+    alertView.addEventListener('click', (ev)=>{
+      if (ev.target === alertView) alertView.classList.remove('show');
+    });
+  </script>
 </body>
 </html>
+
+ 
