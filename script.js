@@ -1,72 +1,50 @@
+// UI
 const btn = document.getElementById('btn');
-const modal = document.getElementById('modal');
+const alertView = document.getElementById('alert');
 const closeBtn = document.getElementById('close');
-const ssidInput = document.getElementById('ssid');
-const modalSsid = document.getElementById('modal-ssid');
+const alertImg = document.getElementById('alertImg');
+const alertFallback = document.getElementById('alertFallback');
 
-const AudioContext = window.AudioContext || window.webkitAudioContext;
+const AudioContextX = window.AudioContext || window.webkitAudioContext;
 let ctx = null;
 
-const NOTES = {
-  'C4': 262, 'D4': 294, 'E4': 330, 'F4': 349,
-  'G4': 392, 'A4': 440, 'B4': 494, 'C5': 523
+// ---------- Motor 8-bit (original, sin copyright) ----------
+const SAMPLE_RATE = 44100;
+
+// Onda cuadrada (lead)
+function squareWave(freq, durationMs, gain=0.18) {
+  const seconds = durationMs/1000;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = 'square';
+  osc.frequency.value = freq;
+  g.gain.value = 0; // pequeño ataque
+  g.gain.linearRampToValueAtTime(gain, ctx.currentTime + 0.01);
+  g.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + seconds - 0.02);
+  osc.connect(g); g.connect(ctx.destination);
+  return {osc, g, stopAt: ctx.currentTime + seconds};
+}
+
+// Ruido para “percusión” simple
+function playNoise(durationMs, gain=0.12){
+  const seconds = durationMs/1000;
+  const buffer = ctx.createBuffer(1, SAMPLE_RATE*seconds, SAMPLE_RATE);
+  const data = buffer.getChannelData(0);
+  for(let i=0;i<data.length;i++){ data[i] = (Math.random()*2-1) * (1 - i/data.length); } // decay
+  const src = ctx.createBufferSource();
+  const g = ctx.createGain();
+  g.gain.value = gain;
+  src.buffer = buffer; src.connect(g); g.connect(ctx.destination);
+  src.start(); src.stop(ctx.currentTime + seconds);
+}
+
+// Escala de frecuencias para el riff (modo mayor con “swing” cuarteto)
+const F = {
+  A3:220, B3:247, C4:262, D4:294, E4:330, F4:349, G4:392,
+  A4:440, B4:494, C5:523, D5:587, E5:659
 };
 
-const MELODY = [
-  ['E4',300], ['E4',300], ['F4',300], ['G4',300],
-  ['G4',300], ['F4',300], ['E4',300], ['D4',300],
-  ['C4',300], ['C4',300], ['D4',300], ['E4',300],
-  ['E4',450], ['D4',150], ['D4',600]
-];
-
-function playTone(freq, durationMs) {
-  if (!ctx) ctx = new AudioContext();
-  const o = ctx.createOscillator();
-  const g = ctx.createGain();
-  o.type = 'square';
-  o.frequency.value = freq;
-  g.gain.setValueAtTime(0, ctx.currentTime);
-  g.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 0.002);
-  g.gain.setValueAtTime(0.18, ctx.currentTime + durationMs / 1000 - 0.02);
-  g.gain.linearRampToValueAtTime(0, ctx.currentTime + durationMs / 1000);
-  o.connect(g); g.connect(ctx.destination);
-  o.start();
-  o.stop(ctx.currentTime + durationMs / 1000 + 0.02);
-}
-
-function playMelody(melody, onfinish) {
-  let t = 0;
-  for (const [note, dur] of melody) {
-    setTimeout(() => {
-      const f = NOTES[note] || 440;
-      playTone(f, dur);
-    }, t);
-    t += dur + 25;
-  }
-  setTimeout(() => { if (onfinish) onfinish(); }, t + 50);
-}
-
-function showModal() { modal.classList.remove('hidden'); }
-function hideModal() { modal.classList.add('hidden'); }
-
-btn.addEventListener('click', () => {
-  btn.disabled = true;
-  const ssid = ssidInput.value.trim();
-  btn.textContent = 'Reproduciendo…';
-  try {
-    playMelody(MELODY, () => {
-      modalSsid.textContent = ssid ? `SSID ingresado: ${ssid}` : '';
-      showModal();
-      btn.disabled = false;
-      btn.textContent = 'Conectate a Wi-Fi';
-    });
-  } catch (e) {
-    console.error('Error audio:', e);
-    btn.disabled = false;
-    btn.textContent = 'Conectate a Wi-Fi';
-    showModal();
-  }
-});
-
-closeBtn.addEventListener('click', hideModal);
-modal.addEventListener('click', (ev) => { if (ev.target === modal) hideModal(); });
+// Riff original 8-bit (no es ninguna canción existente)
+const RIFF = [
+  [F.E4, 180],[F.G4, 180],[F.A4, 180],[F.E4, 180],
+  [F.G4, 180],[F.A4, 180],[
