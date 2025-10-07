@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Simulacro Wi-Fi — Educación</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <main class="card">
+    <img src="logo.png" alt="Logo Wi-Fi" class="logo-img" />
+
+    <h1>Simulacro Wi-Fi</h1>
+
+    <label for="ssid">Nombre de la red (opcional)</label>
+    <input id="ssid" placeholder="Ej: CAFÉ-PÚBLICO" />
+
+    <button id="btn">Conectate a Wi-Fi</button>
+
+    <p class="hint">Este es un simulacro educativo: al presionar suena una breve melodía 8-bit y aparece un aviso.</p>
+  </main>
+
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-content">
+      <h2>Simulacro educativo</h2>
+      <p><strong>No te conectes a cualquier red Wi-Fi.</strong></p>
+      <p id="modal-ssid" style="color:#cfe6ff;margin:6px 0"></p>
+      <p>Esto es un simulacro. Comprueba siempre la fuente antes de conectarte.</p>
+      <button id="close">Cerrar</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
